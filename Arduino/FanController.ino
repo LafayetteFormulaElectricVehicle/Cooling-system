@@ -1,18 +1,25 @@
 //Control fan speed based on thermosistor reading and also 
 //display fan speed RMP in Arduino Serial Monitor
 
+//Baud should be 125K
+
 //////////////////////////////////////////////////////////////////////////////////////
 #include <math.h>
 
 #define FlowThermistorPIN 0                 // Analog Pin 0
 #define FlatThermistorPIN 5
+#define FANPIN 9  // Takes dPin#9 supports PWM
+#define HALLSENSOR 2
+
+
 
 //Varibles used for calculations
 int NbTopsFan; 
 int Calc;
 //The pin location of the sensor
-int hallsensor = 2;
-int fanPWM = 9;
+//int HALLSENSOR = 2;
+//int fanPWM = 9;
+
 typedef struct{                  //Defines the structure for multiple fans and their dividers
   char fantype;
   unsigned int fandiv;
@@ -31,7 +38,6 @@ void rpm ()      //This is the function that the interupt calls
 } 
 
 
-#define  FANPIN 9  // Takes dPin#9 supports PWM
 
 float vcc = 5.00;                       // only used for display purposes, if used
 // set to the measured Vcc.
@@ -44,9 +50,7 @@ float thermr = 10460;                   // thermistor nominal resistance
 int fanSpeedHIGH = 250;  // 20 to 255 as fan speed
 double fanSpeedHIGHThreshold = 28.0;
 
-int fanSpeedLOW = 40;
-
-
+int fanSpeedLOW = 20;
 
 
 float Thermistor(int RawADC) {
@@ -81,8 +85,8 @@ float Thermistor(int RawADC) {
 void setup() {
   Serial.begin(9600);
   pinMode(FANPIN, OUTPUT);
-  pinMode(hallsensor, INPUT); 
-  pinMode(fanPWM,OUTPUT);
+  pinMode(HALLSENSOR, INPUT); 
+  //pinMode(fanPWM,OUTPUT);
   attachInterrupt(0, rpm, RISING); 
 
 }
@@ -122,7 +126,7 @@ void loop() {
 
   } else {
     analogWrite(FANPIN,fanSpeedLOW);
-    Serial.println("Fan speed is LOW, controlled by FLOW Thermistor");
+    Serial.println("Fan speed is LOW");
     Serial.println("      ");
   }
 
@@ -153,9 +157,9 @@ void loop() {
   Serial.println(readingFlat);
 
 
-  
-  
-  
+
+
+
   NbTopsFan = 0;  //Set NbTops to 0 ready for calculations
   sei();   //Enables interrupts
   delay (1000);  //Wait 1 second
