@@ -146,7 +146,7 @@ void loop() {
       analogWrite(FANPIN, manFanSpeed);
       Serial.print("MANUAL Mode: No changes.");
       Serial.print(manFanSpeed);
-
+      Serial.println("      ");
     }
     
     else if(( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == HIGH) ) ){
@@ -154,23 +154,22 @@ void loop() {
       analogWrite(FANPIN, manFanSpeed);
       Serial.print("MANUAL Mode: Fan speed is ++ : ");
       Serial.println(manFanSpeed);
-
-
+      Serial.println("      ");
     }
     else if(( (digitalRead(BTNRED) == HIGH)  && (digitalRead(BTNBLUE) == LOW) )){
       manFanSpeed = manFanSpeed - 10;
       analogWrite(FANPIN, manFanSpeed);
       Serial.print("MANUAL Mode: Fan speed is -- : " );
       Serial.println(manFanSpeed);
-
+      Serial.println("      ");
     }
 
     else {
       analogWrite(FANPIN, manFanSpeed);
       Serial.println("MANUAL Mode: No changes (else).");
       Serial.println(manFanSpeed);
+      Serial.println("      ");
 
-      
     }
 
     
