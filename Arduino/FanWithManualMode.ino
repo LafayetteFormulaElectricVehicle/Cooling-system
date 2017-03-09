@@ -64,7 +64,7 @@ float thermr = 10460;                   // thermistor nominal resistance
 int fanSpeedHIGH = 250;  // 20 to 255 as fan speed
 double fanSpeedHIGHThreshold = 28.0;
 
-int fanSpeedLOW = 20;
+int fanSpeedLOW = 50;
 
 
 float Thermistor(int RawADC) {
@@ -179,12 +179,7 @@ void loop() {
       message.header.length = 2; //formatted in DEC
       message.data[0] = 0x4C; //L
       message.data[1] = 0x4F; //O
-      //  message.data[2] = 0x30;
-      //  message.data[3] = 0xFF; //formatted in HEX
-      //  message.data[4] = 0x00;
-      //  message.data[5] = 0x40;
-      //  message.data[6] = 0x00;
-      //  message.data[7] = 0x00;
+  
 
       mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
       mcp2515_send_message(&message);
