@@ -169,51 +169,53 @@ void loop() {
       Serial.println("      ");
 
       
-  //=================
+      //=================
 
-  tCAN message;
+      tCAN message;
 
-  //send state
-  message.id = 0x0F0; //formatted in HEX
-  message.header.rtr = 0;
-  message.header.length = 2; //formatted in DEC
-  message.data[0] = 0x4C; //L
-  message.data[1] = 0x4F; //O
-  //  message.data[2] = 0x30;
-  //  message.data[3] = 0xFF; //formatted in HEX
-  //  message.data[4] = 0x00;
-  //  message.data[5] = 0x40;
-  //  message.data[6] = 0x00;
-  //  message.data[7] = 0x00;
+      //send state
+      message.id = 0x0F0; //formatted in HEX
+      message.header.rtr = 0;
+      message.header.length = 2; //formatted in DEC
+      message.data[0] = 0x4C; //L
+      message.data[1] = 0x4F; //O
+      //  message.data[2] = 0x30;
+      //  message.data[3] = 0xFF; //formatted in HEX
+      //  message.data[4] = 0x00;
+      //  message.data[5] = 0x40;
+      //  message.data[6] = 0x00;
+      //  message.data[7] = 0x00;
 
-  mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
-  mcp2515_send_message(&message);
-
-
-  //delay(1000);
-
-  //send out fluid temp
-  //tCAN message;
-
-  message.id = 0x0F1; //formatted in HEX
-  message.header.rtr = 0;
-  message.header.length = 4; //formatted in DEC
-
-  int temp1 = (int)temp;
-  message.data[0] = (temp1>>24) & 0xFF;
-  message.data[1] = (temp1>>16) & 0xFF;
-  message.data[2] = (temp1>>8) & 0xFF;
-  message.data[3] = (temp1) & 0xFF;
-  mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
-  mcp2515_send_message(&message);
-
-  delay(1000);
+      mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+      mcp2515_send_message(&message);
 
 
-  //===========================
+      //delay(1000);
+
+      //send out fluid temp
+      //tCAN message;
+
+      message.id = 0x0F1; //formatted in HEX
+      message.header.rtr = 0;
+      message.header.length = 4; //formatted in DEC
+
+      int temp1 = (int)temp;
+      message.data[0] = (temp1>>24) & 0xFF;
+      message.data[1] = (temp1>>16) & 0xFF;
+      message.data[2] = (temp1>>8) & 0xFF;
+      message.data[3] = (temp1) & 0xFF;
+      mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+      mcp2515_send_message(&message);
+
+      delay(1000);
+
+
+      //===========================
 
 
     }
+
+    
   } else {
 
     if( ( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == LOW) )){
@@ -247,14 +249,6 @@ void loop() {
       Serial.println(manFanSpeed);
     }
   } 
-
-
-
-
-
-
-
-
 
 
   //=================================
