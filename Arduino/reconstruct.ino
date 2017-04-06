@@ -3,9 +3,6 @@
 * Created by Xingyuan Guo for ECE 492, Spring 2017, Lafayette College
 * guoxyxy at gmail
 *
-* Due to timing limit, this code is not created as Object-Oriented,
-* which can be further changed to provide easy understanding.
-*
 * References and explanations of some of the code can be found at the end.
 */
 
