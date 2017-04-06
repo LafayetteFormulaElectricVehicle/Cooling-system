@@ -81,7 +81,7 @@ int fanSpeedLOW = 50;
 
 //Global parameter
 bool switchFan;
-
+bool modeSelection;
 //Ends Fan Control Constants and Pins=========================
 //===================================================
 
@@ -180,6 +180,9 @@ void loop() {
 	FlatThermistorReadAndPrint();
 
 	ShowOnLCD();
+	
+	CANwrite();
+	
 	//clearLCD();
 
 }
@@ -248,7 +251,9 @@ void FanModeControl() {
 		
 		if (switchFan == false) {
 
-			if(tempFlow>fanSpeedHIGHThreshold){
+			modeSelection = tempFlow > fanSpeedHIGHThreshold;
+			
+			if(modeSelection){
 
 				Serial.println("Auto Mode");
 
@@ -437,6 +442,65 @@ void ShowOnLCD(){
 
 
 
+//===================================================
+//Starts CANwrite Function=========================
+void CANwrite() {
+	
+	
+	static unsigned long previous_millis;
+	int interval = 1000;
+
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+		
+		
+		tCAN message;
+
+		//send state
+		message.id = 0x0F0; //formatted in HEX
+		message.header.rtr = 0;
+		message.header.length = 2; //formatted in DEC
+		
+		if(!modeSelection){
+			message.data[0] = 0x4C; //L
+			message.data[1] = 0x4F; //O
+		} else {
+			message.data[0] = 0x48; //H
+			message.data[1] = 0x49; //I
+		}
+
+
+		mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+		mcp2515_send_message(&message);
+
+
+		//delay(1000);
+
+		//send out flat temp
+		message.id = 0x0F1; //formatted in HEX
+		message.header.rtr = 0;
+		message.header.length = 4; //formatted in DEC
+
+		int temp1 = (int)tempFlat;
+		message.data[0] = (temp1>>24) & 0xFF;
+		message.data[1] = (temp1>>16) & 0xFF;
+		message.data[2] = (temp1>>8) & 0xFF;
+		message.data[3] = (temp1) & 0xFF;
+		
+		mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+		mcp2515_send_message(&message);
+
+	}
+
+}
+//Ends CANwrite Functions=========================
+//===================================================
+
+
+
+
+
+
 
 //===================================================
 //Starts Thermistor Calculation Functions=========================
@@ -524,7 +588,6 @@ void serCommand(){   //a general function to call the command flag for issuing a
 }
 //Ends LCD Functions=========================
 //===================================================
-
 
 
 
