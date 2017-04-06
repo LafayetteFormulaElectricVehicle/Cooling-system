@@ -57,6 +57,7 @@ unsigned int current_frequency_ = 0;
 float pad = 10000;           // balance/pad resistor value, set this to
 // the measured resistance of your pad resistor
 float thermr = 10460;        // thermistor nominal resistance
+
 //Global TEMP parameter
 float tempFlow, resistanceFlow;
 
@@ -77,6 +78,10 @@ int manFanSpeed = 130;
 int fanSpeedHIGH = 250;  // 20 to 255 as fan speed
 double fanSpeedHIGHThreshold = 28.0;
 int fanSpeedLOW = 50;
+
+//Global parameter
+bool switchFan;
+
 //Ends Fan Control Constants and Pins=========================
 //===================================================
 
@@ -139,7 +144,6 @@ void setup() {
 	pinMode(BTNBLUE, INPUT);
 	pinMode(BTNRED, INPUT);
 	pinMode(FANSWITCH, INPUT);
-
 
 	pinMode(FANPIN, OUTPUT);
 
@@ -211,12 +215,6 @@ void FlowThermistorReadAndPrint() {
 		Serial.print("FLOW Thermistor Analog resistanceFlow "); 
 		Serial.println(resistanceFlow,1);
 
-		// lcdPosition(0,10);
-		// mySerial.print("TempFlow:");
-		// lcdPosition(1,10); 
-		// mySerial.print(resistanceFlow,3);
-
-
 		// convert the value to resistance
 		resistanceFlow = (1023 / resistanceFlow)  - 1;
 		resistanceFlow = pad / resistanceFlow;
@@ -242,7 +240,6 @@ void FanModeControl() {
 	if (millis() - previous_millis > interval) {
 		previous_millis = millis();
 		
-		bool switchFan;
 		if (digitalRead(FANSWITCH) == HIGH) {
 			switchFan = true;
 		} else {
@@ -253,11 +250,15 @@ void FanModeControl() {
 
 			if(tempFlow>fanSpeedHIGHThreshold){
 
+				Serial.println("Auto Mode");
+
 				analogWrite(FANPIN, fanSpeedHIGH);
 				Serial.println("Fan speed is HIGH");
 				Serial.println("      ");
 
 			} else {
+				Serial.println("Auto Mode");
+
 				analogWrite(FANPIN,fanSpeedLOW);
 				Serial.println("Fan speed is LOW");
 				Serial.println("      ");
@@ -337,13 +338,6 @@ void FlatThermistorReadAndPrint() {
 		Serial.print("FLAT Thermistor resistance "); 
 		Serial.println(resistanceFlat);
 		
-		/* //=====================LCD
-	//clearLCD();
-	lcdPosition(2,0);
-	mySerial.print("TempFlat:");
-	lcdPosition(3,0); 
-	mySerial.print(tempFlat,3);
-	//=====================LCD */
 
 	}
 }
@@ -386,14 +380,6 @@ void calculateFlowmeterFrequency(){
 		Serial.print(current_frequency_);
 		Serial.println();
 		
-		/*  //=====================LCD
-	//clearLCD();
-	lcdPosition(0,0);
-	mySerial.print("FlowFreq:");
-	lcdPosition(1,0); 
-	mySerial.print(current_frequency_,1);
-	//=====================LCD
-} */
 	}
 }
 
@@ -430,6 +416,17 @@ void ShowOnLCD(){
 		setPosition(4,0); 
 		mySerial.print(tempFlow,3);
 		
+		if(switchFan){
+			setPosition(1,9); mySerial.print("M");
+			setPosition(2,9); mySerial.print("A");
+			setPosition(3,9); mySerial.print("N");
+			setPosition(4,9); mySerial.print("U");
+		} else {
+			setPosition(1,9); mySerial.print("A");
+			setPosition(2,9); mySerial.print("U");
+			setPosition(3,9); mySerial.print("T");
+			setPosition(4,9); mySerial.print("O");	
+		}
 	}
 }
 //Ends LCDWorking() Function=========================
@@ -500,7 +497,6 @@ void setPosition(int row, int col){
 	} else if (row==4) {
 		pos=col+84;
 	}
-	
 	
 	pos = pos+128;
 	mySerial.write(0XFE);
