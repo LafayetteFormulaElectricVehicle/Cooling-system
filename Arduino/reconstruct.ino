@@ -123,7 +123,7 @@ SoftwareSerial mySerial(3,6); //pin 6 = TX, pin 3 = RX (unused)
 
 //===================================================
 //Starts LCD Constants and Pins=========================
-const int LCDdelay=10;  // conservative, 2 actually works
+const int LCDdelay=5;  // conservative, 2 actually works
 //Ends LCD Functions=========================
 //===================================================
 
@@ -135,32 +135,32 @@ const int LCDdelay=10;  // conservative, 2 actually works
 //===================================================
 //Starts Arduino Setup Function=========================
 void setup() {
-  Serial.begin(9600);
-  pinMode(BTNBLUE, INPUT);
-  pinMode(BTNRED, INPUT);
-  pinMode(FANSWITCH, INPUT);
+	Serial.begin(9600);
+	pinMode(BTNBLUE, INPUT);
+	pinMode(BTNRED, INPUT);
+	pinMode(FANSWITCH, INPUT);
 
 
-  pinMode(FANPIN, OUTPUT);
+	pinMode(FANPIN, OUTPUT);
 
-  //*********************new fan rpm
-  pinMode(fanPulse, INPUT);
-  digitalWrite(fanPulse,HIGH);
-  //*********************new fan rpm
+	//*********************new fan rpm
+	pinMode(fanPulse, INPUT);
+	digitalWrite(fanPulse,HIGH);
+	//*********************new fan rpm
 
-  Serial.println("CAN Write - Testing transmission of CAN Bus messages");
-  delay(1000);
+	Serial.println("CAN Write - Testing transmission of CAN Bus messages");
+	delay(1000);
 
-  if(Canbus.init(CANSPEED_125))  //Initialise MCP2515 CAN controller at the specified speed
-  Serial.println("CAN Init ok");
-  else
-  Serial.println("Can't init CAN");
+	if(Canbus.init(CANSPEED_125))  //Initialise MCP2515 CAN controller at the specified speed
+	Serial.println("CAN Init ok");
+	else
+	Serial.println("Can't init CAN");
 
-  //================LCD
-  mySerial.begin(9600); // set up serial port for 9600 baud
-  //================LCD
+	//================LCD
+	mySerial.begin(9600); // set up serial port for 9600 baud
+	//================LCD
 
-  //delay(1000);
+	//delay(1000);
 }
 //Ends Arduino Setup Function=========================
 
@@ -168,18 +168,16 @@ void setup() {
 //Starts Arduino Loop Function=========================
 void loop() {
 
-  detectFlowmeterRotation(FLOW_PIN);
-  calculateFlowmeterFrequency();
-  //printInfoToSerial();
+	detectFlowmeterRotation(FLOW_PIN);
+	calculateFlowmeterFrequency();
 
-  FlowThermistorReadAndPrint();
-  FanModeControl();
-  FlatThermistorReadAndPrint();
-  FanRPMReadAndPrint();
-  
-  
-  clearLCD();
-  
+	FlowThermistorReadAndPrint();
+	FanModeControl();
+	FlatThermistorReadAndPrint();
+
+	ShowOnLCD();
+	//clearLCD();
+
 }
 //Ends Arduino Loop Function=========================
 //===================================================
@@ -194,37 +192,37 @@ void loop() {
 //In which the method measures and stores temperature of the flow thermistor
 //in the global variables. Also use Serial to print useful information on scree.
 void FlowThermistorReadAndPrint() {
-  static unsigned long previous_millis;
-  int interval = 1000;
+	static unsigned long previous_millis;
+	int interval = 1000;
 
-  if (millis() - previous_millis > interval) {
-    previous_millis = millis();
-    
-    tempFlow=Thermistor(analogRead(FlowThermistorPIN)); // read ADC and  convert it to Celsius
-    Serial.print("FLOW Thermistor Celsius: "); 
-    Serial.print(tempFlow,1);                  // display Celsius
-    //tempFlow = (tempFlow * 9.0)/ 5.0 + 32.0;    // converts to  Fahrenheit
-    //Serial.print(", Fahrenheit: "); 
-    //Serial.print(tempFlow,1);     // display  Fahrenheit
-    Serial.println("");  
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+		
+		tempFlow=Thermistor(analogRead(FlowThermistorPIN)); // read ADC and  convert it to Celsius
+		Serial.print("FLOW Thermistor Celsius: "); 
+		Serial.print(tempFlow,1);                  // display Celsius
+		//tempFlow = (tempFlow * 9.0)/ 5.0 + 32.0;    // converts to  Fahrenheit
+		//Serial.print(", Fahrenheit: "); 
+		//Serial.print(tempFlow,1);     // display  Fahrenheit
+		Serial.println("");  
 
-    resistanceFlow = analogRead(FlowThermistorPIN);
+		resistanceFlow = analogRead(FlowThermistorPIN);
 
-    Serial.print("FLOW Thermistor Analog resistanceFlow "); 
-    Serial.println(resistanceFlow,1);
+		Serial.print("FLOW Thermistor Analog resistanceFlow "); 
+		Serial.println(resistanceFlow,1);
 
-    lcdPosition(0,10);
-    mySerial.print("TempFlow:");
-    lcdPosition(1,10); 
-    mySerial.print(resistanceFlow,3);
+		// lcdPosition(0,10);
+		// mySerial.print("TempFlow:");
+		// lcdPosition(1,10); 
+		// mySerial.print(resistanceFlow,3);
 
 
-    // convert the value to resistance
-    resistanceFlow = (1023 / resistanceFlow)  - 1;
-    resistanceFlow = pad / resistanceFlow;
-    Serial.print("FLOW Thermistor resistance "); 
-    Serial.println(resistanceFlow);
-  }
+		// convert the value to resistance
+		resistanceFlow = (1023 / resistanceFlow)  - 1;
+		resistanceFlow = pad / resistanceFlow;
+		Serial.print("FLOW Thermistor resistance "); 
+		Serial.println(resistanceFlow);
+	}
 }
 //Ends FlowThermistorReadAndPrint() Function=========================
 //===================================================
@@ -238,67 +236,67 @@ void FlowThermistorReadAndPrint() {
 //Starts FanModeControl() Function=========================
 void FanModeControl() {
 
-  static unsigned long previous_millis;
-  int interval = 1000;
+	static unsigned long previous_millis;
+	int interval = 1000;
 
-  if (millis() - previous_millis > interval) {
-    previous_millis = millis();
-    
-    bool switchFan;
-    if (digitalRead(FANSWITCH) == HIGH) {
-      switchFan = true;
-    } else {
-      switchFan = false;
-    }
-    
-    if (switchFan == false) {
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+		
+		bool switchFan;
+		if (digitalRead(FANSWITCH) == HIGH) {
+			switchFan = true;
+		} else {
+			switchFan = false;
+		}
+		
+		if (switchFan == false) {
 
-      if(tempFlow>fanSpeedHIGHThreshold){
+			if(tempFlow>fanSpeedHIGHThreshold){
 
-        analogWrite(FANPIN, fanSpeedHIGH);
-        Serial.println("Fan speed is HIGH");
-        Serial.println("      ");
+				analogWrite(FANPIN, fanSpeedHIGH);
+				Serial.println("Fan speed is HIGH");
+				Serial.println("      ");
 
-      } else {
-        analogWrite(FANPIN,fanSpeedLOW);
-        Serial.println("Fan speed is LOW");
-        Serial.println("      ");
-      }
-    } else {
-      
-      if( ( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == LOW) )){
-        analogWrite(FANPIN, manFanSpeed);
-        Serial.print("MANUAL Mode: No changes. Fan speed is: ");
-        Serial.println(manFanSpeed);
-      }
-      
-      else if(( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == HIGH) ) ){
-        manFanSpeed = manFanSpeed + 10;
-        if(manFanSpeed <= 255) {manFanSpeed = manFanSpeed;}
-        else {manFanSpeed = 255;}
-        analogWrite(FANPIN, manFanSpeed);
-        Serial.print("MANUAL Mode: Fan speed is ++ : ");
-        Serial.println(manFanSpeed);
+			} else {
+				analogWrite(FANPIN,fanSpeedLOW);
+				Serial.println("Fan speed is LOW");
+				Serial.println("      ");
+			}
+		} else {
+			
+			if( ( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == LOW) )){
+				analogWrite(FANPIN, manFanSpeed);
+				Serial.print("MANUAL Mode: No changes. Fan speed is: ");
+				Serial.println(manFanSpeed);
+			}
+			
+			else if(( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == HIGH) ) ){
+				manFanSpeed = manFanSpeed + 10;
+				if(manFanSpeed <= 255) {manFanSpeed = manFanSpeed;}
+				else {manFanSpeed = 255;}
+				analogWrite(FANPIN, manFanSpeed);
+				Serial.print("MANUAL Mode: Fan speed is ++ : ");
+				Serial.println(manFanSpeed);
 
-      }
-      else if(( (digitalRead(BTNRED) == HIGH)  && (digitalRead(BTNBLUE) == LOW) )){
-        manFanSpeed = manFanSpeed - 10;
-        if(manFanSpeed >= 10) {manFanSpeed = manFanSpeed;}
-        else {manFanSpeed = 10;}
-        analogWrite(FANPIN, manFanSpeed);
-        Serial.print("MANUAL Mode: Fan speed is -- : " );
-        Serial.println(manFanSpeed);
+			}
+			else if(( (digitalRead(BTNRED) == HIGH)  && (digitalRead(BTNBLUE) == LOW) )){
+				manFanSpeed = manFanSpeed - 10;
+				if(manFanSpeed >= 10) {manFanSpeed = manFanSpeed;}
+				else {manFanSpeed = 10;}
+				analogWrite(FANPIN, manFanSpeed);
+				Serial.print("MANUAL Mode: Fan speed is -- : " );
+				Serial.println(manFanSpeed);
 
-      }
+			}
 
-      else {
-        analogWrite(FANPIN, manFanSpeed);
-        Serial.println("MANUAL Mode: No changes (else).");
-        Serial.println(manFanSpeed);
-      }
-      
-    }
-  }
+			else {
+				analogWrite(FANPIN, manFanSpeed);
+				Serial.println("MANUAL Mode: No changes (else).");
+				Serial.println(manFanSpeed);
+			}
+			
+		}
+	}
 }
 //Ends FanModeControl() Function=========================
 //===================================================
@@ -312,42 +310,42 @@ void FanModeControl() {
 //In which the method measures and stores temperature of the flat thermistor
 //in the global variables. Also use Serial to print useful information on scree.
 void FlatThermistorReadAndPrint() {
-  static unsigned long previous_millis;
-  int interval = 1000;
+	static unsigned long previous_millis;
+	int interval = 1000;
 
-  if (millis() - previous_millis > interval) {
-    previous_millis = millis();
-    
-    tempFlat=Thermistor(analogRead(FlatThermistorPIN));       // read ADC and  convert it to Celsius
-    Serial.print("FLAT Thermistor Celsius: "); 
-    Serial.print(tempFlat,1);                             // display Celsius
-    //temp = (temp * 9.0)/ 5.0 + 32.0;                  // converts to  Fahrenheit
-    //Serial.print(", Fahrenheit: "); 
-    //Serial.print(temp,1);                             // display  Fahrenheit
-    Serial.println("");  
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+		
+		tempFlat=Thermistor(analogRead(FlatThermistorPIN));       // read ADC and  convert it to Celsius
+		Serial.print("FLAT Thermistor Celsius: "); 
+		Serial.print(tempFlat,1);                             // display Celsius
+		//temp = (temp * 9.0)/ 5.0 + 32.0;                  // converts to  Fahrenheit
+		//Serial.print(", Fahrenheit: "); 
+		//Serial.print(temp,1);                             // display  Fahrenheit
+		Serial.println("");  
 
 
 
-    resistanceFlat = analogRead(FlatThermistorPIN);
+		resistanceFlat = analogRead(FlatThermistorPIN);
 
-    Serial.print("FLAT Thermistor Analog reading "); 
-    Serial.println(resistanceFlat);
+		Serial.print("FLAT Thermistor Analog reading "); 
+		Serial.println(resistanceFlat);
 
-    // convert the value to resistance
-    resistanceFlat = (1023 / resistanceFlat)  - 1;
-    resistanceFlat = pad / resistanceFlat;
-    Serial.print("FLAT Thermistor resistance "); 
-    Serial.println(resistanceFlat);
-    
-    //=====================LCD
-    //clearLCD();
-    lcdPosition(0,0);
-    mySerial.print("TempFlat:");
-    lcdPosition(1,0); 
-    mySerial.print(tempFlat,3);
-    //=====================LCD
+		// convert the value to resistance
+		resistanceFlat = (1023 / resistanceFlat)  - 1;
+		resistanceFlat = pad / resistanceFlat;
+		Serial.print("FLAT Thermistor resistance "); 
+		Serial.println(resistanceFlat);
+		
+		/* //=====================LCD
+	//clearLCD();
+	lcdPosition(2,0);
+	mySerial.print("TempFlat:");
+	lcdPosition(3,0); 
+	mySerial.print(tempFlat,3);
+	//=====================LCD */
 
-  }
+	}
 }
 //Ends FlatThermistorReadAndPrint() Function=========================
 //===================================================
@@ -358,81 +356,47 @@ void FlatThermistorReadAndPrint() {
 
 
 //===================================================
-//Starts FanRPMReadAndPrint() Function=========================
-void FanRPMReadAndPrint() {
-  static unsigned long previous_millis;
-  int interval = 1000;
-
-  if (millis() - previous_millis > interval) {
-    previous_millis = millis();
-    
-    //*********************new fan rpm
-    pulseDuration = pulseIn(fanPulse, LOW);
-    double frequency = 1000000/pulseDuration;
-
-    Serial.print("pulse duration:");
-    Serial.println(16200162/pulseDuration);
-
-    Serial.println("");
-    //*********************new fan rpm
-    Serial.println("-------------------------");
-
-  }
-}
-//Ends FanRPMReadAndPrint() Function=========================
-//===================================================
-
-
-
-
-
-
-//===================================================
 //Starts Flow Meter Functions=========================
 void detectFlowmeterRotation(int flow_pin){
-  if(digitalRead(flow_pin))
-  latch1_=true;
-  if(!digitalRead(flow_pin))
-  latch2_=true;
+	if(digitalRead(flow_pin))
+	latch1_=true;
+	if(!digitalRead(flow_pin))
+	latch2_=true;
 
-  if(latch1_ && latch2_){//only true after a rotation
-    latch1_ = false;
-    latch2_ = false;
-    window_count_++;
-    total_count_++;
-  }
+	if(latch1_ && latch2_){//only true after a rotation
+		latch1_ = false;
+		latch2_ = false;
+		window_count_++;
+		total_count_++;
+	}
 }
 
 void calculateFlowmeterFrequency(){
 
-  static unsigned long previous_millis;
+	static unsigned long previous_millis;
 
-  if (millis() - previous_millis > INTERVAL) { //if within the rolling window INTERVAL
-    previous_millis = millis(); //save last time the clock updated in previous_millis
-    current_frequency_ = window_count_ * (1000/INTERVAL);
-    window_count_ = 0; //reset window counter, cumulative counters unaffected.
-    Serial.print("total_count_: ");
-    Serial.print(total_count_);
-    Serial.print(" | ");
-    Serial.print("window_count_: ");
-    Serial.print(current_frequency_);
-    Serial.println();
-  }
+	if (millis() - previous_millis > INTERVAL) { //if within the rolling window INTERVAL
+		previous_millis = millis(); //save last time the clock updated in previous_millis
+		current_frequency_ = window_count_ * (1000/INTERVAL);
+		window_count_ = 0; //reset window counter, cumulative counters unaffected.
+		Serial.print("total_count_: ");
+		Serial.print(total_count_);
+		Serial.print(" | ");
+		Serial.print("window_count_: ");
+		Serial.print(current_frequency_);
+		Serial.println();
+		
+		/*  //=====================LCD
+	//clearLCD();
+	lcdPosition(0,0);
+	mySerial.print("FlowFreq:");
+	lcdPosition(1,0); 
+	mySerial.print(current_frequency_,1);
+	//=====================LCD
+} */
+	}
 }
 
-void printInfoToSerial(){
-  static unsigned long previous_millis;
-
-  if (millis() - previous_millis > INTERVAL) { //if within the rolling window INTERVAL
-    previous_millis = millis(); //save last time the clock updated in previous_millis
-    Serial.print("total_count_: ");
-    Serial.print(total_count_);
-    Serial.print(" | ");
-    Serial.print("window_count_: ");
-    Serial.print(current_frequency_);
-    Serial.println();
-  }
-}
 //Ends Flow Meter Functions=========================
 //===================================================
 
@@ -442,34 +406,70 @@ void printInfoToSerial(){
 
 
 //===================================================
+//Starts LCDWorking() Function=========================
+void ShowOnLCD(){
+
+	static unsigned long previous_millis;
+	int interval = 1000;
+
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+		
+		setPosition(1,0);
+		mySerial.print("FlowFreq:");
+		setPosition(2,0); 
+		mySerial.print(current_frequency_,1);
+		
+		setPosition(1,10);
+		mySerial.print("TempFlat:");
+		setPosition(2,10); 
+		mySerial.print(tempFlat,3);
+		
+		setPosition(3,0);
+		mySerial.print("TempFlow:");
+		setPosition(4,0); 
+		mySerial.print(tempFlow,3);
+		
+	}
+}
+//Ends LCDWorking() Function=========================
+//===================================================
+
+
+
+
+
+
+
+//===================================================
 //Starts Thermistor Calculation Functions=========================
 float Thermistor(int RawADC) {
-  long Resistance;  
-  float Temp;  // Dual-Purpose variable to save space.
+	long Resistance;  
+	float Temp;  // Dual-Purpose variable to save space.
 
-  Resistance=pad*((1024.0 / RawADC) - 1); 
-  Temp = log(Resistance); // Saving the Log(resistance) so not to calculate  it 4 times later
-  Temp = 1 / (0.001129148 + (0.000234125 * Temp) + (0.0000000876741 * Temp * Temp * Temp));
-  Temp = Temp - 273.15;  // Convert Kelvin to Celsius                      
+	Resistance=pad*((1024.0 / RawADC) - 1); 
+	Temp = log(Resistance); // Saving the Log(resistance) so not to calculate  it 4 times later
+	Temp = 1 / (0.001129148 + (0.000234125 * Temp) + (0.0000000876741 * Temp * Temp * Temp));
+	Temp = Temp - 273.15;  // Convert Kelvin to Celsius                      
 
-  // BEGIN- Remove these lines for the function not to display anything
-  //Serial.print("ADC: "); 
-  //Serial.print(RawADC); 
-  //Serial.print("/1024");                           // Print out RAW ADC Number
-  //Serial.print(", vcc: ");
-  //Serial.print(vcc,2);
-  //Serial.print(", pad: ");
-  //Serial.print(pad/1000,3);
-  //Serial.print(" Kohms, Volts: "); 
-  //Serial.print(((RawADC*vcc)/1024.0),3);   
-  //Serial.print(", Resistance: "); 
-  //Serial.print(Resistance);
-  //Serial.print(" ohms, ");
-  // END- Remove these lines for the function not to display anything
+	// BEGIN- Remove these lines for the function not to display anything
+	//Serial.print("ADC: "); 
+	//Serial.print(RawADC); 
+	//Serial.print("/1024");                           // Print out RAW ADC Number
+	//Serial.print(", vcc: ");
+	//Serial.print(vcc,2);
+	//Serial.print(", pad: ");
+	//Serial.print(pad/1000,3);
+	//Serial.print(" Kohms, Volts: "); 
+	//Serial.print(((RawADC*vcc)/1024.0),3);   
+	//Serial.print(", Resistance: "); 
+	//Serial.print(Resistance);
+	//Serial.print(" ohms, ");
+	// END- Remove these lines for the function not to display anything
 
-  // Uncomment this line for the function to return Fahrenheit instead.
-  //tempFlow = (Temp * 9.0)/ 5.0 + 32.0;                  // Convert to Fahrenheit
-  return Temp;                                      // Return the Temperature
+	// Uncomment this line for the function to return Fahrenheit instead.
+	//tempFlow = (Temp * 9.0)/ 5.0 + 32.0;                  // Convert to Fahrenheit
+	return Temp;                                      // Return the Temperature
 }
 //Ends Thermistor Calculation Functions=========================
 //===================================================
@@ -483,27 +483,48 @@ float Thermistor(int RawADC) {
 //Starts LCD Functions=========================
 // wbp: goto with row & column
 void lcdPosition(int row, int col) {
-  mySerial.write(0xFE);   //command flag
-  mySerial.write((col + row*64 + 128));    //position 
-  delay(LCDdelay);
+	mySerial.write(0xFE);   //command flag
+	mySerial.write((col + row*64 + 128));    //position 
+	delay(LCDdelay);
 }
+
+void setPosition(int row, int col){
+	int pos; 
+	
+	if (row==1) {
+		pos=col;
+	} else if (row==2) {
+		pos=col+64; 
+	} else if (row==3) {
+		pos=col+20; 
+	} else if (row==4) {
+		pos=col+84;
+	}
+	
+	
+	pos = pos+128;
+	mySerial.write(0XFE);
+	mySerial.write(pos);
+	delay(LCDdelay);
+}
+
 void clearLCD(){
-  mySerial.write(0xFE);   //command flag
-  mySerial.write(0x01);   //clear command.
-  delay(LCDdelay);
+	mySerial.write(0xFE);   //command flag
+	mySerial.write(0x01);   //clear command.
+	delay(LCDdelay);
 }
 void backlightOn() {  //turns on the backlight
-  mySerial.write(0x7C);   //command flag for backlight stuff
-  mySerial.write(157);    //light level.
-  delay(LCDdelay);
+	mySerial.write(0x7C);   //command flag for backlight stuff
+	mySerial.write(157);    //light level.
+	delay(LCDdelay);
 }
 void backlightOff(){  //turns off the backlight
-  mySerial.write(0x7C);   //command flag for backlight stuff
-  mySerial.write(128);     //light level for off.
-  delay(LCDdelay);
+	mySerial.write(0x7C);   //command flag for backlight stuff
+	mySerial.write(128);     //light level for off.
+	delay(LCDdelay);
 }
 void serCommand(){   //a general function to call the command flag for issuing all other commands   
-  mySerial.write(0xFE);
+	mySerial.write(0xFE);
 }
 //Ends LCD Functions=========================
 //===================================================
