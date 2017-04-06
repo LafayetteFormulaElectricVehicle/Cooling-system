@@ -1,7 +1,7 @@
 /*
 * Cooling System Central Controller
 * Created by Xingyuan Guo for ECE 492, Spring 2017, Lafayette College
-* guoxyxy at gmail
+* Questions direct to: guoxyxy at gmail
 *
 * References and explanations of some of the code can be found at the end.
 */
