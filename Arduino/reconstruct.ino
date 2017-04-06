@@ -79,6 +79,7 @@ int fanSpeedLOW = 50;
 //Global parameter
 bool switchFan;
 bool modeSelection;
+
 //Ends Fan Control Constants and Pins=========================
 //===================================================
 
@@ -179,6 +180,8 @@ void loop() {
 	ShowOnLCD();
 	
 	CANwrite();
+	
+	Serial.print("===============");  
 	
 	//clearLCD();
 
@@ -612,24 +615,5 @@ void serCommand(){   //a general function to call the command flag for issuing a
 //https://github.com/scogswell/ArduinoSerLCD/blob/master/examples/SerLCD_Demo_20x4/SerLCD_Demo_20x4.ino
 //http://labs.teague.com/?p=722
 //http://playground.arduino.cc/Learning/SparkFunSerLCD
-//void clearLCD(){
-//   Serial.write(0xFE);   //command flag
-//   Serial.write(0x01);   //clear command.
-//}
-//void backlightOn(){  //turns on the backlight
-//    Serial.write(0x7C);   //command flag for backlight stuff
-//    Serial.write(157);    //light level.
-//}
-//void backlightOff(){  //turns off the backlight
-//    Serial.write(0x7C);   //command flag for backlight stuff
-//    Serial.write(128);     //light level for off.
-//}
-//void backlight50(){  //sets the backlight at 50% brightness
-//    Serial.write(0x7C);   //command flag for backlight stuff
-//    Serial.write(143);     //light level for off.
-//}
-//void serCommand(){   //a general function to call the command flag for issuing all other commands   
-//  Serial.write(0xFE);
-//}
 //Ends References=========================
 //===================================================
