@@ -126,7 +126,7 @@ SoftwareSerial mySerial(3,6); //pin 6 = TX, pin 3 = RX (unused)
 
 //===================================================
 //Starts SafetyLoop Pins=========================
-#define SAFEPIN 13
+#define SAFEPIN 10
 //Ends SafetyLoop Pins=========================
 //===================================================
 
@@ -193,7 +193,7 @@ void loop() {
 	ShowOnLCD();
 
 	CANwrite();
-	
+
 	SafetyLoopController();
 
 	//Serial.print("===============");  
@@ -467,8 +467,10 @@ void SafetyLoopController() {
 	if (millis() - previous_millis > interval) {
 		previous_millis = millis();
 		
-		if(tempFlat > 28){
+		if(tempFlat > 26.0){
 			digitalWrite(SAFEPIN,LOW);
+		} else {
+			digitalWrite(SAFEPIN,HIGH);
 		}
 	}
 }
@@ -484,18 +486,20 @@ void SafetyLoopController() {
 //Starts CANwrite Function=========================
 void CANwrite() {
 
+
 	static unsigned long previous_millis;
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
 		previous_millis = millis();
 		
+		
 		tCAN message;
 
 		//send state
 		message.id = 0x0F0; //formatted in HEX
 		message.header.rtr = 0;
-		message.header.length = 8; //formatted in DEC
+		message.header.length = 2; //formatted in DEC
 		
 		if(!modeSelection){
 			message.data[0] = 0x4C; //L
@@ -504,35 +508,24 @@ void CANwrite() {
 			message.data[0] = 0x48; //H
 			message.data[1] = 0x49; //I
 		}
-		
-		int tempVAR1 = (int)tempFlat;
-		message.data[2] = (tempVAR1>>24) & 0xFF;
-		message.data[3] = (tempVAR1>>16) & 0xFF;
-		message.data[4] = (tempVAR1>>8) & 0xFF;
-		message.data[5] = (tempVAR1) & 0xFF;
-		
+
 
 		mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
 		mcp2515_send_message(&message);
 
-		//================================================================
-		//this is currently under testing
+
 		//delay(1000);
 
 		//send out flat temp
 		message.id = 0x0F1; //formatted in HEX
 		message.header.rtr = 0;
-		message.header.length = 8; //formatted in DEC
+		message.header.length = 4; //formatted in DEC
 
 		int temp1 = (int)tempFlat;
 		message.data[0] = (temp1>>24) & 0xFF;
 		message.data[1] = (temp1>>16) & 0xFF;
 		message.data[2] = (temp1>>8) & 0xFF;
 		message.data[3] = (temp1) & 0xFF;
-		message.data[4] = (temp1>>24) & 0xFF;
-		message.data[5] = (temp1>>16) & 0xFF;
-		message.data[6] = (temp1>>8) & 0xFF;
-		message.data[7] = (temp1) & 0xFF;
 		
 		mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
 		mcp2515_send_message(&message);
