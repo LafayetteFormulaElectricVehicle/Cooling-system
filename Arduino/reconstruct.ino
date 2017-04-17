@@ -141,8 +141,19 @@ SoftwareSerial mySerial(3,6); //pin 6 = TX, pin 3 = RX (unused)
 
 //===================================================
 //Starts LCD Constants and Pins=========================
-const int LCDdelay=5;  // conservative, 2 actually works
+const int LCDdelay=5;  // conservative, 2 works
 //Ends LCD Functions=========================
+//===================================================
+
+
+
+
+
+//===================================================
+//Starts Pump Relay Pins=========================
+#define PUMP 100
+bool PUMPHIGH;
+//Ends SafetyLoop Pins=========================
 //===================================================
 
 
@@ -172,9 +183,9 @@ void setup() {
 	delay(1000);
 
 	if(Canbus.init(CANSPEED_125))  //Initialise MCP2515 CAN controller at the specified speed
-		Serial.println("CAN Init ok");
+	Serial.println("CAN Init ok");
 	else
-		Serial.println("Can't init CAN");
+	Serial.println("Can't init CAN");
 
 	//================LCD
 	mySerial.begin(9600); // set up serial port for 9600 baud
@@ -290,7 +301,7 @@ void FanModeControl() {
 			// Serial.println(fanSpeedHIGHThreshold);  
 			// Serial.print("========");
 
-		
+			
 			if(modeSelection) {
 
 				Serial.println("Auto Mode");
@@ -404,9 +415,9 @@ void FlatThermistorReadAndPrint() {
 void detectFlowmeterRotation(int flow_pin) {
 
 	if(digitalRead(flow_pin))
-		latch1_=true;
+	latch1_=true;
 	if(!digitalRead(flow_pin))
-		latch2_=true;
+	latch2_=true;
 
 	if(latch1_ && latch2_) { //only true after a rotation
 		latch1_ = false;
@@ -454,19 +465,43 @@ void ShowOnLCD() {
 
 		if(!switchFan) { //If in auto mode, display sensor readings
 			setPosition(1,0);
-			mySerial.print("FlowFreq:");
-			setPosition(2,0);
-			mySerial.print(current_frequency_,7);
+			mySerial.print("FlowFreq");
+			
+			if(current_frequency_<10){
+				setPosition(2,0);
+				mySerial.print(current_frequency_);
+				setPosition(2,1);
+				mySerial.print("       ");
+			} 
 
-			setPosition(1,10);
+			if (current_frequency_<100 && current_frequency_>=10){
+				setPosition(2,0);
+				mySerial.print(current_frequency_);
+				setPosition(2,2);
+				mySerial.print("      ");
+			}
+			
+			if(current_frequency_>100){ //Should not exceed 4 digits
+				setPosition(2,0);
+				mySerial.print(current_frequency_);
+				setPosition(2,2);
+				mySerial.print("     ");
+			}
+
+			setPosition(1,11);
 			mySerial.print("TempFlat:");
-			setPosition(2,10);
-			mySerial.print(tempFlat,7);
+			setPosition(2,11);
+			mySerial.print(tempFlat,5);
+			
+			setPosition(3,11);
+			mySerial.print("TemFlowM:");
+			setPosition(4,11);
+			mySerial.print(tempFlat,5);
 
 			setPosition(3,0);
-			mySerial.print("TempFlow:");
+			mySerial.print("TemFlowR");
 			setPosition(4,0);
-			mySerial.print(tempFlat,7);
+			mySerial.print(tempFlat,5);
 			
 			
 			setPosition(1,9);
@@ -481,14 +516,34 @@ void ShowOnLCD() {
 
 		} else { //Else, display fan speed percentage & pump status
 			setPosition(1,0);
-			mySerial.print("Fan%:    ");
+			mySerial.print("Fan%:   ");
 			setPosition(2,0);
-			mySerial.print("+/- w/PBs");
+			mySerial.print("+/- w/PB");
 			setPosition(3,0);
 			double manFanPercentage = 20*(manFanSpeed - 20)/47;
-			mySerial.print(manFanPercentage,7);
+			mySerial.print(manFanPercentage,5);
 			setPosition(4,0);
 			mySerial.print("         ");
+			
+			setPosition(3,11);
+			mySerial.print("         ");
+			setPosition(4,11);
+			mySerial.print("         ");
+			
+			setPosition(1,11);
+			mySerial.print("PmpState:");
+			
+			if(PUMPHIGH){
+				setPosition(2,11);
+				mySerial.print("HI");
+			} else {
+				setPosition(2,11);
+				mySerial.print("LO");
+			}
+			
+			setPosition(2,13);
+			mySerial.print("       ");
+			
 			
 			setPosition(1,9);
 			mySerial.print("M");
@@ -502,26 +557,7 @@ void ShowOnLCD() {
 			
 		}
 
-		// //Seperate frmo previous section to make it clean
-		// if(switchFan) { //If in auto mode
-			// setPosition(1,9);
-			// mySerial.print("M");
-			// setPosition(2,9);
-			// mySerial.print("A");
-			// setPosition(3,9);
-			// mySerial.print("N");
-			// setPosition(4,9);
-			// mySerial.print("U");
-		// } else { //Else in manu mode
-			// setPosition(1,9);
-			// mySerial.print("A");
-			// setPosition(2,9);
-			// mySerial.print("U");
-			// setPosition(3,9);
-			// mySerial.print("T");
-			// setPosition(4,9);
-			// mySerial.print("O");
-		// }
+
 	}
 }
 //Ends LCDWorking() Function=========================
