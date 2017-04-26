@@ -1,12 +1,13 @@
 /*
 * Cooling System Central Controller
 * Created by Xingyuan Guo for ECE 492, Spring 2017, Lafayette College
-* Questions direct to: guoxyxy at gmail
 *
 * The MCP2515 CAN Controller can use various libraries
 * besides the one from SparkFun (currently using).
 *
 * References can be found at the end of the code.
+*
+* For Arduino UNO, PWM pins are: 3, 5, 6, 9, 10 and 11.
 */
 
 
@@ -54,6 +55,8 @@ float current_frequency_ = 0;
 //Starts Thermistor Constants and Pins=========================
 #define FlowThermistorPIN 0  // Analog Pin 0
 #define FlatThermistorPIN 5  //Analog Pin 5
+#define 
+
 float pad = 10460;           // balance/pad resistor value, set this to
 // the measured resistance of your pad resistor
 float thermr = 10000;        // thermistor nominal resistance
@@ -74,9 +77,15 @@ float tempFlat, resistanceFlat;
 //===================================================
 //Starts Fan Control Constants and Pins=========================
 #define FANPIN 9  //PWM Pin
+#define FANPIN2 5 //The second pin - check if the pin works =================================
+
 int manFanSpeed = 130; //Initial Manu Mode Fan Speed
+					   //Modifiable in run time w/PB
+					   
 int fanSpeedHIGH = 250;  // 20 to 255 as fan speed
-double fanSpeedHIGHThreshold = 28.0;
+
+double fanSpeedHIGHThreshold = 28.0; //Changable in run time w/PB
+
 int fanSpeedLOW = 50;
 
 //Global parameter
@@ -93,8 +102,11 @@ bool modeSelection;
 
 //===================================================
 //Starts Fan RPM Reading Constants and Pins=========================
-#define fanPulse 12
-unsigned long pulseDuration;
+#define FANPULSE1 12
+#define FANPULSE2 13 //temp - check if the pin works =====================================
+unsigned long pulseDuration1;
+unsigned long pulseDuration2;
+
 //Ends Fan RPM Reading Constants and Pins=========================
 //===================================================
 
@@ -151,7 +163,7 @@ const int LCDdelay=5;  // conservative, 2 works
 
 //===================================================
 //Starts Pump Relay Pins=========================
-#define PUMP 100
+#define PUMP 11
 bool PUMPHIGH;
 //Ends SafetyLoop Pins=========================
 //===================================================
@@ -173,8 +185,10 @@ void setup() {
 	pinMode(FANPIN, OUTPUT);
 
 	//*********************new fan rpm
-	pinMode(fanPulse, INPUT);
-	digitalWrite(fanPulse,HIGH);
+	pinMode(FANPULSE1, INPUT);
+	digitalWrite(FANPULSE1,HIGH);
+	pinMode(FANPULSE2, INPUT);
+	digitalWrite(FANPULSE2,HIGH);
 	//*********************new fan rpm
 
 	pinMode(SAFEPIN,OUTPUT);
@@ -205,12 +219,16 @@ void loop() {
 	FlowThermistorReadAndPrint();
 	FanModeControl();
 	FlatThermistorReadAndPrint();
+	
+	FanReader();
 
 	ShowOnLCD();
 
 	CANwrite();
 
 	SafetyLoopController();
+	
+	PumpShifter();
 
 	//Serial.print("===============");
 
@@ -307,6 +325,8 @@ void FanModeControl() {
 				Serial.println("Auto Mode");
 
 				analogWrite(FANPIN, fanSpeedHIGH);
+				analogWrite(FANPIN2, fanSpeedHIGH);
+				
 				Serial.println("Fan speed is HIGH");
 				Serial.println("      ");
 
@@ -314,36 +334,50 @@ void FanModeControl() {
 				Serial.println("Auto Mode");
 
 				analogWrite(FANPIN,fanSpeedLOW);
+				analogWrite(FANPIN2,fanSpeedLOW);
+
 				Serial.println("Fan speed is LOW");
 				Serial.println("      ");
 			}
 		} else { //Manu Mode
 
 			if( ( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == LOW) )) {
+				
 				analogWrite(FANPIN, manFanSpeed);
+				analogWrite(FANPIN2, manFanSpeed);
+				
 				Serial.print("MANUAL Mode: No changes. Fan speed is: ");
 				Serial.println(manFanSpeed);
 			}
 
 			else if(( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == HIGH) ) ) {
+				
 				manFanSpeed = manFanSpeed + 10;
+				
 				if(manFanSpeed <= 255) {
 					manFanSpeed = manFanSpeed;
 				} else {
 					manFanSpeed = 255;
 				}
+				
 				analogWrite(FANPIN, manFanSpeed);
+				analogWrite(FANPIN2, manFanSpeed);
+
 				Serial.print("MANUAL Mode: Fan speed is ++ : ");
 				Serial.println(manFanSpeed);
 
 			} else if(( (digitalRead(BTNRED) == HIGH)  && (digitalRead(BTNBLUE) == LOW) )) {
+				
 				manFanSpeed = manFanSpeed - 10;
+				
 				if(manFanSpeed >= 10) {
 					manFanSpeed = manFanSpeed;
 				} else {
 					manFanSpeed = 10;
 				}
 				analogWrite(FANPIN, manFanSpeed);
+				analogWrite(FANPIN2, manFanSpeed);
+
 				Serial.print("MANUAL Mode: Fan speed is -- : " );
 				Serial.println(manFanSpeed);
 
@@ -351,6 +385,8 @@ void FanModeControl() {
 
 			else {
 				analogWrite(FANPIN, manFanSpeed);
+				analogWrite(FANPIN2, manFanSpeed);
+
 				Serial.println("MANUAL Mode: No changes (else).");
 				Serial.println(manFanSpeed);
 			}
@@ -465,7 +501,7 @@ void ShowOnLCD() {
 
 		if(!switchFan) { //If in auto mode, display sensor readings
 			setPosition(1,0);
-			mySerial.print("FlowFreq");
+			mySerial.print("FlowFreq:");
 			
 			if(current_frequency_<10){
 				setPosition(2,0);
@@ -499,10 +535,9 @@ void ShowOnLCD() {
 			mySerial.print(tempFlat,5);
 
 			setPosition(3,0);
-			mySerial.print("TemFlowR");
+			mySerial.print("TemFlowR:");
 			setPosition(4,0);
 			mySerial.print(tempFlat,5);
-			
 			
 			setPosition(1,9);
 			mySerial.print("A");
@@ -587,6 +622,69 @@ void SafetyLoopController() {
 }
 //Ends SafetyLoopController Function=========================
 //===================================================
+
+
+
+
+
+//===================================================
+//Starts PumpShifter Functions=========================
+void PumpShifter() {
+
+	static unsigned long previous_millis;
+	int interval = 1000;
+
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+
+		if(PUMPHIGH) {
+			digitalWrite(PUMP,LOW);
+		} else {
+			digitalWrite(PUMP,HIGH);
+		}
+	}
+}
+//Ends PumpShifter Function=========================
+//===================================================
+
+
+
+
+
+
+//===================================================
+//Starts FanReader() Functions=========================
+void FanReader() {
+
+	static unsigned long previous_millis;
+	int interval = 1000;
+
+	if (millis() - previous_millis > interval) {
+		previous_millis = millis();
+
+		pulseDuration1 = pulseIn(FANPULSE1, LOW);
+		pulseDuration2 = pulseIn(FANPULSE2, LOW);
+		
+		double frequency = 1000000/pulseDuration1;
+		double frequency2 = 1000000/pulseDuration2;
+
+
+		Serial.print("pulse duration:");
+		Serial.println(16200162/pulseDuration1);
+		Serial.println(16200162/pulseDuration2);
+
+
+		Serial.println("");
+		//*********************new fan rpm
+		Serial.println("-------------------------");
+		
+		
+	}
+}
+//Ends FanReader Function=========================
+//===================================================
+
+
 
 
 
@@ -759,6 +857,7 @@ void serCommand() {  //a general function to call the command flag for issuing a
 
 //===================================================
 //Starts References =========================
+//http://www.beefrankly.org/blog/2011/12/21/read-out-4-pin-cpu-fan-speed/
 //https://learn.adafruit.com/multi-tasking-the-arduino-part-1/all-together-now
 //https://github.com/scogswell/ArduinoSerLCD/blob/master/examples/SerLCD_Demo_20x4/SerLCD_Demo_20x4.ino
 //http://labs.teague.com/?p=722
