@@ -8,6 +8,8 @@
 * References can be found at the end of the code.
 *
 * For Arduino UNO, PWM pins are: 3, 5, 6, 9, 10 and 11.
+*
+* In every methods except Aduino System functions, millis() is used to do multitasking.
 */
 
 
@@ -55,10 +57,11 @@ float current_frequency_ = 0;
 //Starts Thermistor Constants and Pins=========================
 #define FlowThermistorPIN 0  // Analog Pin 0
 #define FlatThermistorPIN 5  //Analog Pin 5
-#define 
+//#define 
 
 float pad = 10460;           // balance/pad resistor value, set this to
 // the measured resistance of your pad resistor
+
 float thermr = 10000;        // thermistor nominal resistance
 
 //Global TEMP parameter
@@ -230,10 +233,6 @@ void loop() {
 	
 	PumpShifter();
 
-	//Serial.print("===============");
-
-	//clearLCD();
-
 }
 //Ends Arduino Loop Function=========================
 //===================================================
@@ -253,6 +252,7 @@ void FlowThermistorReadAndPrint() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		tempFlow=Thermistor(analogRead(FlowThermistorPIN)); // read ADC and  convert it to Celsius
@@ -291,6 +291,7 @@ void FanModeControl() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		if (digitalRead(FANSWITCH) == HIGH) {
@@ -339,6 +340,7 @@ void FanModeControl() {
 				Serial.println("Fan speed is LOW");
 				Serial.println("      ");
 			}
+			
 		} else { //Manu Mode
 
 			if( ( (digitalRead(BTNRED) == LOW)  && (digitalRead(BTNBLUE) == LOW) )) {
@@ -381,9 +383,7 @@ void FanModeControl() {
 				Serial.print("MANUAL Mode: Fan speed is -- : " );
 				Serial.println(manFanSpeed);
 
-			}
-
-			else {
+			} else {
 				analogWrite(FANPIN, manFanSpeed);
 				analogWrite(FANPIN2, manFanSpeed);
 
@@ -412,6 +412,7 @@ void FlatThermistorReadAndPrint() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		tempFlat=Thermistor(analogRead(FlatThermistorPIN));       // read ADC and  convert it to Celsius
@@ -468,6 +469,7 @@ void calculateFlowmeterFrequency() {
 	static unsigned long previous_millis;
 
 	if (millis() - previous_millis > INTERVAL) { //if within the rolling window INTERVAL
+	
 		previous_millis = millis(); //save last time the clock updated in previous_millis
 		current_frequency_ = window_count_ * (1000/INTERVAL);
 		window_count_ = 0; //reset window counter, cumulative counters unaffected.
@@ -497,13 +499,16 @@ void ShowOnLCD() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		if(!switchFan) { //If in auto mode, display sensor readings
+		
 			setPosition(1,0);
 			mySerial.print("FlowFreq:");
 			
 			if(current_frequency_<10){
+				
 				setPosition(2,0);
 				mySerial.print(current_frequency_);
 				setPosition(2,1);
@@ -511,6 +516,7 @@ void ShowOnLCD() {
 			} 
 
 			if (current_frequency_<100 && current_frequency_>=10){
+				
 				setPosition(2,0);
 				mySerial.print(current_frequency_);
 				setPosition(2,2);
@@ -518,6 +524,7 @@ void ShowOnLCD() {
 			}
 			
 			if(current_frequency_>100){ //Should not exceed 4 digits
+			
 				setPosition(2,0);
 				mySerial.print(current_frequency_);
 				setPosition(2,2);
@@ -550,6 +557,7 @@ void ShowOnLCD() {
 			
 
 		} else { //Else, display fan speed percentage & pump status
+		
 			setPosition(1,0);
 			mySerial.print("Fan%:   ");
 			setPosition(2,0);
@@ -611,6 +619,7 @@ void SafetyLoopController() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		if(tempFlat > SAFETYLOOPTHRE) {
@@ -635,6 +644,7 @@ void PumpShifter() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		if(PUMPHIGH) {
@@ -660,6 +670,7 @@ void FanReader() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
 
 		pulseDuration1 = pulseIn(FANPULSE1, LOW);
@@ -699,8 +710,8 @@ void CANwrite() {
 	int interval = 1000;
 
 	if (millis() - previous_millis > interval) {
+		
 		previous_millis = millis();
-
 
 		tCAN message;
 
@@ -794,17 +805,17 @@ void lcdPosition(int row, int col) { //Row starts from 1, col starts from 0
 void setPosition(int row, int col) {
 	int pos;
 
-	if (row==1) {
+	if (row == 1) {
 		pos=col;
-	} else if (row==2) {
-		pos=col+64;
-	} else if (row==3) {
-		pos=col+20;
-	} else if (row==4) {
-		pos=col+84;
+	} else if (row == 2) {
+		pos = col + 64;
+	} else if (row == 3) {
+		pos = col + 20;
+	} else if (row == 4) {
+		pos = col + 84;
 	}
 
-	pos = pos+128;
+	pos = pos + 128;
 	mySerial.write(0XFE);
 	mySerial.write(pos);
 	delay(LCDdelay);
