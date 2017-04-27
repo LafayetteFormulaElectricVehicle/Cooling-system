@@ -676,13 +676,13 @@ void FanReader() {
 		pulseDuration1 = pulseIn(FANPULSE1, LOW);
 		pulseDuration2 = pulseIn(FANPULSE2, LOW);
 		
-		double frequency = 1000000/pulseDuration1;
-		double frequency2 = 1000000/pulseDuration2;
+		double frequency = 1000000 / pulseDuration1;
+		double frequency2 = 1000000 / pulseDuration2;
 
 
 		Serial.print("pulse duration:");
-		Serial.println(16200162/pulseDuration1);
-		Serial.println(16200162/pulseDuration2);
+		Serial.println(16200162 / pulseDuration1);
+		Serial.println(16200162 / pulseDuration2);
 
 
 		Serial.println("");
@@ -776,7 +776,7 @@ float Thermistor(int RawADC) {
 	long Resistance;
 	float Temp;  // Dual-Purpose variable to save space.
 
-	Resistance=pad*((1024.0 / RawADC) - 1);
+	Resistance= pad * ((1024.0 / RawADC) - 1);
 	Temp = log(Resistance); // Saving the Log(resistance) so not to calculate  it 4 times later
 	Temp = 1 / (0.001129148 + (0.000234125 * Temp) + (0.0000000876741 * Temp * Temp * Temp));
 	Temp = Temp - 273.15;  // Convert Kelvin to Celsius
